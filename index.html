@@ -75,5 +75,28 @@
             }
         }, 5000);
     </script>
+    <script>
+    // Recebe dados da URL (fallback)
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlData = urlParams.get('data');
+    
+    if (urlData) {
+        try {
+            const data = JSON.parse(decodeURIComponent(urlData));
+            updateContent(data);
+        } catch (e) {
+            console.error('Error parsing URL data:', e);
+        }
+    }
+
+    // Recebe via postMessage
+    window.addEventListener('message', function(event) {
+        if (event.origin === 'https://kadubmx.github.io' || 
+            event.origin.includes('lowcoder')) {
+            console.log('Dados recebidos via postMessage:', event.data);
+            updateContent(event.data);
+        }
+    });
+</script>
 </body>
 </html>
