@@ -3,79 +3,57 @@
 <head>
     <title>Receiver</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            padding: 20px;
-        }
         #messageLog {
-            height: 300px;
-            overflow-y: auto;
-            border: 1px solid #ccc;
             padding: 10px;
-            margin-top: 10px;
-            background: #f9f9f9;
-        }
-        .message {
-            margin-bottom: 10px;
-            padding-bottom: 10px;
-            border-bottom: 1px dashed #ddd;
-        }
-        .status {
-            padding: 10px;
-            background: #d4edda;
-            color: #155724;
-            margin-bottom: 15px;
-            border-radius: 4px;
+            margin: 10px 0;
+            border: 1px solid #eee;
+            min-height: 100px;
         }
     </style>
 </head>
 <body>
-    <div class="status">✔ Ready to receive messages</div>
-    <h2>Received Messages:</h2>
-    <div id="messageLog">Waiting for messages...</div>
-
+    <h1>PostMessage Receiver</h1>
+    <div id="messageLog">Aguardando mensagens...</div>
+    
     <script>
-        const messageLog = document.getElementById('messageLog');
-        
-        function addMessage(msg, origin) {
-            const now = new Date().toLocaleTimeString();
-            const msgElement = document.createElement('div');
-            msgElement.className = 'message';
-            
-            let formattedMsg;
-            try {
-                formattedMsg = JSON.stringify(msg, null, 2);
-            } catch(e) {
-                formattedMsg = msg.toString();
-            }
-            
-            msgElement.innerHTML = `
-                <strong>${now}</strong> - From: ${origin || 'unknown'}<br>
-                <pre>${formattedMsg}</pre>
+        // Função para mostrar mensagens recebidas
+        function displayMessage(data) {
+            const log = document.getElementById('messageLog');
+            const messageElement = document.createElement('div');
+            messageElement.innerHTML = `
+                <p><strong>${new Date().toLocaleTimeString()}</strong></p>
+                <pre>${JSON.stringify(data, null, 2)}</pre>
+                <hr>
             `;
             
-            if (messageLog.firstChild.textContent === "Waiting for messages...") {
-                messageLog.innerHTML = '';
+            if (log.firstChild.textContent === "Aguardando mensagens...") {
+                log.innerHTML = '';
             }
             
-            messageLog.prepend(msgElement);
+            log.prepend(messageElement);
         }
 
+        // Listener para mensagens
         window.addEventListener('message', function(event) {
-            console.log('Message received:', event.data);
-            addMessage(event.data, event.origin);
-            
-            // Auto-respond to ping messages
-            if (event.data && event.data.type === 'PING') {
-                event.source.postMessage({
-                    type: 'PONG',
-                    timestamp: new Date().toISOString(),
-                    original: event.data
-                }, event.origin);
+            // Verifica a origem para segurança
+            if (event.origin.includes('lowcoder') || 
+                event.origin === window.location.origin) {
+                
+                // Mostra a mensagem recebida
+                displayMessage(event.data);
+                
+                // Resposta opcional
+                if (event.data && event.data.type) {
+                    event.source.postMessage({
+                        type: 'ACKNOWLEDGE',
+                        received: true,
+                        yourMessage: event.data
+                    }, event.origin);
+                }
             }
         });
-
-        console.log('Receiver initialized and ready');
+        
+        console.log('Receiver pronto na origem:', window.location.origin);
     </script>
 </body>
 </html>
