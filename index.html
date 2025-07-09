@@ -1,59 +1,79 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Receiver</title>
+    <meta charset="UTF-8">
     <style>
-        #messageLog {
-            padding: 10px;
-            margin: 10px 0;
-            border: 1px solid #eee;
-            min-height: 100px;
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 15px;
+        }
+        .content-box {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            background-color: #f9f9f9;
+        }
+        .timestamp {
+            font-size: 0.8em;
+            color: #666;
+            text-align: right;
         }
     </style>
 </head>
 <body>
-    <h1>PostMessage Receiver</h1>
-    <div id="messageLog">Aguardando mensagens...</div>
-    
-    <script>
-        // Função para mostrar mensagens recebidas
-        function displayMessage(data) {
-            const log = document.getElementById('messageLog');
-            const messageElement = document.createElement('div');
-            messageElement.innerHTML = `
-                <p><strong>${new Date().toLocaleTimeString()}</strong></p>
-                <pre>${JSON.stringify(data, null, 2)}</pre>
-                <hr>
-            `;
-            
-            if (log.firstChild.textContent === "Aguardando mensagens...") {
-                log.innerHTML = '';
-            }
-            
-            log.prepend(messageElement);
-        }
+    <div id="dynamicContent" class="content-box">
+        <h2 id="title">Carregando...</h2>
+        <p id="body">Aguardando dados do Lowcoder.</p>
+        <div class="timestamp" id="timestamp"></div>
+    </div>
 
-        // Listener para mensagens
-        window.addEventListener('message', function(event) {
-            // Verifica a origem para segurança
-            if (event.origin.includes('lowcoder') || 
-                event.origin === window.location.origin) {
+    <script>
+        // Função para atualizar o conteúdo com dados da Query2
+        function updateContent(data) {
+            if (data && data.content) {
+                document.getElementById('title').textContent = data.content.title;
+                document.getElementById('body').textContent = data.content.body;
+                document.getElementById('timestamp').textContent = `Atualizado em: ${new Date(data.timestamp).toLocaleString()}`;
                 
-                // Mostra a mensagem recebida
-                displayMessage(event.data);
-                
-                // Resposta opcional
-                if (event.data && event.data.type) {
-                    event.source.postMessage({
-                        type: 'ACKNOWLEDGE',
-                        received: true,
-                        yourMessage: event.data
-                    }, event.origin);
+                // Aplicar configurações de tema
+                if (data.config && data.config.theme === 'dark') {
+                    document.body.style.backgroundColor = '#333';
+                    document.body.style.color = '#fff';
                 }
             }
-        });
-        
-        console.log('Receiver pronto na origem:', window.location.origin);
+        }
+
+        // Verificar se estamos no Lowcoder (dados injetados)
+        if (window.lowcoderData) {
+            updateContent(window.lowcoderData);
+        }
+
+        // Alternativa: receber dados via URL (para iframe externo)
+        function getDataFromUrl() {
+            const params = new URLSearchParams(window.location.search);
+            if (params.has('data')) {
+                try {
+                    return JSON.parse(decodeURIComponent(params.get('data')));
+                } catch (e) {
+                    console.error('Erro ao parsear dados da URL:', e);
+                }
+            }
+            return null;
+        }
+
+        // Tentar obter dados da URL
+        const urlData = getDataFromUrl();
+        if (urlData) {
+            updateContent(urlData);
+        }
+
+        // Atualizar a cada 5 segundos (opcional)
+        setInterval(() => {
+            if (window.lowcoderData) {
+                updateContent(window.lowcoderData);
+            }
+        }, 5000);
     </script>
 </body>
 </html>
