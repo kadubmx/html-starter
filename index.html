@@ -1,62 +1,81 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html>
 <head>
-<meta charset="utf-8" />
-<title>Agenda – POC</title>
-<style>
-  body      { font-family: Arial, sans-serif; padding: 20px; }
-  #log      { margin-top: 16px; background:#f5f5f5; padding:12px; border-radius:4px;}
-  pre       { background:#eef; padding:12px; border-radius:4px; overflow-x:auto;}
-  .ts       { color:#888; font-size:12px; }
-</style>
+    <title>Receiver</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        #messageLog {
+            height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-top: 10px;
+            background: #f9f9f9;
+        }
+        .message {
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px dashed #ddd;
+        }
+        .status {
+            padding: 10px;
+            background: #d4edda;
+            color: #155724;
+            margin-bottom: 15px;
+            border-radius: 4px;
+        }
+    </style>
 </head>
 <body>
+    <div class="status">✔ Ready to receive messages</div>
+    <h2>Received Messages:</h2>
+    <div id="messageLog">Waiting for messages...</div>
 
-<h2>Agenda recebida</h2>
-<pre id="resultado">Aguardando dados…</pre>
+    <script>
+        const messageLog = document.getElementById('messageLog');
+        
+        function addMessage(msg, origin) {
+            const now = new Date().toLocaleTimeString();
+            const msgElement = document.createElement('div');
+            msgElement.className = 'message';
+            
+            let formattedMsg;
+            try {
+                formattedMsg = JSON.stringify(msg, null, 2);
+            } catch(e) {
+                formattedMsg = msg.toString();
+            }
+            
+            msgElement.innerHTML = `
+                <strong>${now}</strong> - From: ${origin || 'unknown'}<br>
+                <pre>${formattedMsg}</pre>
+            `;
+            
+            if (messageLog.firstChild.textContent === "Waiting for messages...") {
+                messageLog.innerHTML = '';
+            }
+            
+            messageLog.prepend(msgElement);
+        }
 
-<div id="log"><strong>Log</strong><br></div>
+        window.addEventListener('message', function(event) {
+            console.log('Message received:', event.data);
+            addMessage(event.data, event.origin);
+            
+            // Auto-respond to ping messages
+            if (event.data && event.data.type === 'PING') {
+                event.source.postMessage({
+                    type: 'PONG',
+                    timestamp: new Date().toISOString(),
+                    original: event.data
+                }, event.origin);
+            }
+        });
 
-<script>
-function ts() { return new Date().toLocaleTimeString(); }
-function log(msg){ document.getElementById('log').innerHTML += `<div class="ts">[${ts()}]</div>${msg}<br>`; console.log(msg); }
-
-function exibirAgenda(dados){
-  document.getElementById('resultado').textContent =
-    JSON.stringify(dados, null, 2);
-  log('✅ Agenda exibida!');
-}
-
-/* --------- 1. Evento Customizado --------- */
-document.addEventListener('receberAgenda', ev=>{
-  log('📨 Evento receberAgenda recebido');
-  exibirAgenda(ev.detail?.dados);
-});
-
-/* --------- 2. Variável Global (polling) --------- */
-setInterval(()=>{
-  if (window.dadosAgenda){
-    log('📨 dadosAgenda detectado via polling');
-    exibirAgenda(window.dadosAgenda.dados);
-    window.dadosAgenda = null;          // limpa para não repetir
-  }
-}, 1000);
-
-/* --------- 3. postMessage (caso iframe) --------- */
-window.addEventListener('message', ev=>{
-  if (ev.data?.tipo === 'exibir_agenda'){
-    log('📨 postMessage recebido');
-    exibirAgenda(ev.data.dados);
-  }
-});
-
-/* ---------- Função de teste manual -------- */
-window.testeAgenda = () => {
-  exibirAgenda({ teste:true, horario:'10:00', status:'ok' });
-  log('🧪 testeAgenda() executado');
-};
-log('Widget pronto. Execute testeAgenda() no console p/ testar.');
-</script>
-
+        console.log('Receiver initialized and ready');
+    </script>
 </body>
 </html>
