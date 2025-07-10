@@ -2,43 +2,65 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <title>Teste modalBloqueio</title>
+  <title>Controle do Modal</title>
+
   <style>
-    body {font-family: system-ui, sans-serif; padding: 30px}
-    button {padding: 12px 20px; margin: 4px; border: none; border-radius: 4px; cursor: pointer}
-    .abrir  {background:#22c55e; color:#fff}
-    .fechar {background:#ef4444; color:#fff}
+    *{box-sizing:border-box;font-family:Arial,Helvetica,sans-serif}
+    body{margin:0;padding:24px;background:#f5f5f5}
+    .card{max-width:380px;margin:auto;background:#fff;padding:32px;border-radius:8px;
+          box-shadow:0 2px 10px rgba(0,0,0,.12)}
+    h2{margin-top:0;font-weight:600}
+    button{width:100%;padding:14px 0;margin-top:12px;font-size:16px;border:none;
+           border-radius:4px;cursor:pointer;color:#fff;transition:.25s}
+    .open{background:#28a745}.open:hover{background:#208638}
+    .close{background:#dc3545}.close:hover{background:#c62c3c}
+    .toast{margin-top:16px;padding:12px;border-radius:4px;font-size:14px;display:none}
+    .ok{background:#d4edda;color:#155724}
+    .err{background:#f8d7da;color:#721c24}
   </style>
 </head>
 <body>
+  <div class="card">
+    <h2>Modal “Bloqueio”</h2>
 
-  <h3>Disparar modalBloqueio via postMessage</h3>
+    <button class="open" id="btnOpen">🔓 Abrir modal</button>
+    <button class="close" id="btnClose">🔒 Fechar modal</button>
 
-  <button class="abrir"  onclick="abrir()">🟢 Abrir</button>
-  <button class="fechar" onclick="fechar()">🔴 Fechar</button>
+    <div id="toast" class="toast"></div>
+  </div>
 
   <script>
-    /** Envia a mensagem para a janela-pai (Lowcoder) --------- */
-    function abrir () {
-      console.log('🔄 enviando OPEN_MODAL_BLOQUEIO');
-      window.parent.postMessage({
-        type: 'OPEN_MODAL_BLOQUEIO',   // identificador
-        modalId: 'modalBloqueio',      // **nome exportado** no Lowcoder
-        payload: { origem: 'iframe', ts: Date.now() }
-      }, '*');
-    }
-
-    function fechar () {
-      console.log('🔄 enviando CLOSE_MODAL_BLOQUEIO');
-      window.parent.postMessage({ type: 'CLOSE_MODAL_BLOQUEIO', modalId: 'modalBloqueio' }, '*');
-    }
-
-    /** (opcional) escuta respostas do Lowcoder --------------- */
-    window.addEventListener('message', (ev) => {
-      if (ev.data?.type === 'MODAL_RESPONSE')
-        console.log('📨 resposta Lowcoder:', ev.data);
-    });
+/* ---------- utilidades ---------- */
+const MODAL = 'modalBloqueio';     // nome exato do modal no Lowcoder
+const TOAST = document.getElementById('toast');
+function showToast(msg, ok=true){
+  TOAST.textContent = msg;
+  TOAST.className = `toast ${ok?'ok':'err'}`;
+  TOAST.style.display = 'block';
+  setTimeout(()=> TOAST.style.display='none', 3000);
+}
+/* ---------- envio seguro ---------- */
+function sendToParent(msg){
+  // pequeno debounce evita que o mesmo clique feche o modal imediatamente
+  setTimeout(()=> window.parent.postMessage(msg, '*'), 30);
+}
+/* ---------- handlers ---------- */
+document.getElementById('btnOpen').addEventListener('click', e=>{
+  e.stopPropagation();          // clique não “atravessa” para o Lowcoder
+  sendToParent({ type:'OPEN_MODAL', modalName:MODAL });
+});
+document.getElementById('btnClose').addEventListener('click', e=>{
+  e.stopPropagation();
+  sendToParent({ type:'CLOSE_MODAL', modalName:MODAL });
+});
+/* ---------- escuta resposta ---------- */
+window.addEventListener('message', ev=>{
+  if(ev.data?.type==='MODAL_RESPONSE' && ev.data.modalName===MODAL){
+      showToast(ev.data.success ? 'Modal operado com sucesso ✅'
+                                : `Erro: ${ev.data.error}`, ev.data.success);
+  }
+});
+console.log('✅ Widget pronto – clique para abrir/fechar o modal');
   </script>
-
 </body>
 </html>
