@@ -1,316 +1,44 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lowcoder Modal1 Trigger</title>
-    <style>
-        body {
-            margin: 0;
-            padding: 20px;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background-color: #f5f5f5;
-        }
-        
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            background: white;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        
-        h1 {
-            color: #333;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-        
-        .method-section {
-            margin-bottom: 30px;
-            padding: 20px;
-            border: 1px solid #e0e0e0;
-            border-radius: 6px;
-            background-color: #fafafa;
-        }
-        
-        .method-title {
-            font-size: 18px;
-            font-weight: 600;
-            color: #2c3e50;
-            margin-bottom: 15px;
-        }
-        
-        .button {
-            display: inline-block;
-            padding: 12px 24px;
-            margin: 5px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 500;
-            text-decoration: none;
-            transition: all 0.3s ease;
-        }
-        
-        .btn-primary {
-            background-color: #007bff;
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            background-color: #0056b3;
-        }
-        
-        .btn-success {
-            background-color: #28a745;
-            color: white;
-        }
-        
-        .btn-success:hover {
-            background-color: #1e7e34;
-        }
-        
-        .btn-warning {
-            background-color: #ffc107;
-            color: #212529;
-        }
-        
-        .btn-warning:hover {
-            background-color: #e0a800;
-        }
-        
-        .code-block {
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 4px;
-            padding: 15px;
-            margin: 10px 0;
-            font-family: 'Courier New', monospace;
-            font-size: 13px;
-            overflow-x: auto;
-        }
-        
-        .note {
-            background: #e7f3ff;
-            border-left: 4px solid #007bff;
-            padding: 15px;
-            margin: 15px 0;
-            border-radius: 0 4px 4px 0;
-        }
-        
-        .warning {
-            background: #fff3cd;
-            border-left: 4px solid #ffc107;
-            padding: 15px;
-            margin: 15px 0;
-            border-radius: 0 4px 4px 0;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <title>Teste modalBloqueio</title>
+  <style>
+    body {font-family: system-ui, sans-serif; padding: 30px}
+    button {padding: 12px 20px; margin: 4px; border: none; border-radius: 4px; cursor: pointer}
+    .abrir  {background:#22c55e; color:#fff}
+    .fechar {background:#ef4444; color:#fff}
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🚀 Abrir Modal no Lowcoder</h1>
-        
-        <!-- Método 1: Usando window.parent.postMessage -->
-        <div class="method-section">
-            <div class="method-title">Método 1: PostMessage (Recomendado)</div>
-            <p>Este método usa postMessage para se comunicar com o Lowcoder:</p>
-            
-            <button class="button btn-primary" onclick="openModalPostMessage()">
-                Abrir Modal (PostMessage)
-            </button>
-            
-            <div class="code-block">
-function openModalPostMessage() {
-    // Envia comando para o Lowcoder
-    window.parent.postMessage({
-        type: 'OPEN_MODAL',
-        modalId: 'meuModal',
-        data: {
-            title: 'Título do Modal',
-            content: 'Conteúdo do modal'
-        }
-    }, '*');
-}
-            </div>
-        </div>
-        
-        <!-- Método 2: Usando Global Events -->
-        <div class="method-section">
-            <div class="method-title">Método 2: Eventos Globais</div>
-            <p>Dispara eventos que podem ser capturados pelos componentes do Lowcoder:</p>
-            
-            <button class="button btn-success" onclick="openModalGlobalEvent()">
-                Abrir Modal (Evento Global)
-            </button>
-            
-            <div class="code-block">
-function openModalGlobalEvent() {
-    // Dispara evento personalizado
-    const event = new CustomEvent('openLowcoderModal', {
-        detail: {
-            modalId: 'meuModal',
-            title: 'Modal via Evento',
-            content: 'Conteúdo personalizado'
-        }
-    });
-    
-    window.dispatchEvent(event);
-}
-            </div>
-        </div>
-        
-        <!-- Método 3: Usando URL Hash -->
-        <div class="method-section">
-            <div class="method-title">Método 3: URL Hash</div>
-            <p>Modifica a URL para trigger o modal (se configurado no Lowcoder):</p>
-            
-            <button class="button btn-warning" onclick="openModalUrlHash()">
-                Abrir Modal (URL Hash)
-            </button>
-            
-            <div class="code-block">
-function openModalUrlHash() {
-    // Modifica o hash da URL
-    window.location.hash = '#modal=meuModal&action=open';
-    
-    // Ou usando history API
-    window.history.pushState({}, '', '#modal=meuModal');
-}
-            </div>
-        </div>
-        
-        <div class="note">
-            <strong>💡 Dica:</strong> No Lowcoder, você precisa configurar um Event Listener ou Query que escute esses eventos para abrir o modal correspondente.
-        </div>
-        
-        <div class="warning">
-            <strong>⚠️ Importante:</strong> Certifique-se de que o modal existe no seu app Lowcoder e está configurado para responder aos eventos.
-        </div>
-        
-        <!-- Exemplo de configuração no Lowcoder -->
-        <div class="method-section">
-            <div class="method-title">Configuração no Lowcoder</div>
-            <p>No seu app Lowcoder, adicione este código em uma Query ou Event Handler:</p>
-            
-            <div class="code-block">
-// Para capturar PostMessage
-window.addEventListener('message', function(event) {
-    if (event.data.type === 'OPEN_MODAL') {
-        // Abrir o modal com o ID especificado
-        modal1.setHidden(false); // Substitua 'modal1' pelo ID do seu modal
+
+  <h3>Disparar modalBloqueio via postMessage</h3>
+
+  <button class="abrir"  onclick="abrir()">🟢 Abrir</button>
+  <button class="fechar" onclick="fechar()">🔴 Fechar</button>
+
+  <script>
+    /** Envia a mensagem para a janela-pai (Lowcoder) --------- */
+    function abrir () {
+      console.log('🔄 enviando OPEN_MODAL_BLOQUEIO');
+      window.parent.postMessage({
+        type: 'OPEN_MODAL_BLOQUEIO',   // identificador
+        modalId: 'modalBloqueio',      // **nome exportado** no Lowcoder
+        payload: { origem: 'iframe', ts: Date.now() }
+      }, '*');
     }
-});
 
-// Para capturar Evento Global
-window.addEventListener('openLowcoderModal', function(event) {
-    const { modalId, title, content } = event.detail;
-    
-    // Configurar e abrir o modal
-    modal1.setHidden(false);
-    // Você pode também atualizar o conteúdo do modal dinamicamente
-});
-            </div>
-        </div>
-    </div>
+    function fechar () {
+      console.log('🔄 enviando CLOSE_MODAL_BLOQUEIO');
+      window.parent.postMessage({ type: 'CLOSE_MODAL_BLOQUEIO', modalId: 'modalBloqueio' }, '*');
+    }
 
-    <script>
-        // Método 1: PostMessage
-        function openModalPostMessage() {
-            console.log('Enviando PostMessage para abrir modal...');
-            
-            try {
-                window.parent.postMessage({
-                    type: 'OPEN_MODAL',
-                    modalId: 'meuModal',
-                    data: {
-                        title: 'Modal aberto via PostMessage',
-                        content: 'Este modal foi aberto usando window.parent.postMessage'
-                    }
-                }, '*');
-                
-                console.log('PostMessage enviado com sucesso!');
-            } catch (error) {
-                console.error('Erro ao enviar PostMessage:', error);
-            }
-        }
-        
-        // Método 2: Evento Global
-        function openModalGlobalEvent() {
-            console.log('Disparando evento global para abrir modal...');
-            
-            try {
-                const event = new CustomEvent('openLowcoderModal', {
-                    detail: {
-                        modalId: 'meuModal',
-                        title: 'Modal via Evento Global',
-                        content: 'Este modal foi aberto usando CustomEvent',
-                        timestamp: new Date().toISOString()
-                    }
-                });
-                
-                window.dispatchEvent(event);
-                
-                // Também dispara no parent se estivermos em iframe
-                if (window.parent !== window) {
-                    window.parent.dispatchEvent(event);
-                }
-                
-                console.log('Evento global disparado com sucesso!');
-            } catch (error) {
-                console.error('Erro ao disparar evento global:', error);
-            }
-        }
-        
-        // Método 3: URL Hash
-        function openModalUrlHash() {
-            console.log('Modificando URL hash para abrir modal...');
-            
-            try {
-                // Método 1: Usando location.hash
-                window.location.hash = '#modal=meuModal&action=open&timestamp=' + Date.now();
-                
-                // Método 2: Usando history API (opcional)
-                const newUrl = window.location.pathname + window.location.search + '#modal=meuModal&action=open';
-                window.history.pushState({ modalOpen: true }, '', newUrl);
-                
-                console.log('URL hash modificado com sucesso!');
-                
-                // Dispara evento personalizado para notificar a mudança
-                const hashEvent = new CustomEvent('hashModalTrigger', {
-                    detail: {
-                        hash: window.location.hash,
-                        modalId: 'meuModal'
-                    }
-                });
-                
-                window.dispatchEvent(hashEvent);
-                
-            } catch (error) {
-                console.error('Erro ao modificar URL hash:', error);
-            }
-        }
-        
-        // Listener para debug - mostra quando eventos são disparados
-        window.addEventListener('openLowcoderModal', function(event) {
-            console.log('Evento openLowcoderModal capturado:', event.detail);
-        });
-        
-        window.addEventListener('hashModalTrigger', function(event) {
-            console.log('Evento hashModalTrigger capturado:', event.detail);
-        });
-        
-        // Listener para messages (debug)
-        window.addEventListener('message', function(event) {
-            console.log('Message recebida:', event.data);
-        });
-        
-        console.log('🚀 Custom Widget HTML carregado! Ready para abrir modals no Lowcoder.');
-    </script>
+    /** (opcional) escuta respostas do Lowcoder --------------- */
+    window.addEventListener('message', (ev) => {
+      if (ev.data?.type === 'MODAL_RESPONSE')
+        console.log('📨 resposta Lowcoder:', ev.data);
+    });
+  </script>
+
 </body>
 </html>
-
