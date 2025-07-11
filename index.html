@@ -1,66 +1,26 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8" />
-  <title>Controle do Modal</title>
+<div id="saida" style="white-space: pre-wrap; font-family: monospace;"></div>
 
-  <style>
-    *{box-sizing:border-box;font-family:Arial,Helvetica,sans-serif}
-    body{margin:0;padding:24px;background:#f5f5f5}
-    .card{max-width:380px;margin:auto;background:#fff;padding:32px;border-radius:8px;
-          box-shadow:0 2px 10px rgba(0,0,0,.12)}
-    h2{margin-top:0;font-weight:600}
-    button{width:100%;padding:14px 0;margin-top:12px;font-size:16px;border:none;
-           border-radius:4px;cursor:pointer;color:#fff;transition:.25s}
-    .open{background:#28a745}.open:hover{background:#208638}
-    .close{background:#dc3545}.close:hover{background:#c62c3c}
-    .toast{margin-top:16px;padding:12px;border-radius:4px;font-size:14px;display:none}
-    .ok{background:#d4edda;color:#155724}
-    .err{background:#f8d7da;color:#721c24}
-  </style>
-</head>
-<body>
-  <div class="card">
-    <h2>Modal “Bloqueio”</h2>
+<script>
+const saida = document.getElementById("saida");
 
-    <button class="open" id="btnOpen">🔓 Abrir modal</button>
-    <button class="close" id="btnClose">🔒 Fechar modal</button>
+window.addEventListener("message", (event) => {
+  if (event.data?.type === "LOCALSTORAGE_DATA") {
+    const { authData, userData, anonKey } = event.data.payload;
 
-    <div id="toast" class="toast"></div>
-  </div>
+    saida.textContent = `
+✅ Dados recebidos por postMessage:
 
-  <script>
-/* ---------- utilidades ---------- */
-const MODAL = 'modalBloqueio';     // nome exato do modal no Lowcoder
-const TOAST = document.getElementById('toast');
-function showToast(msg, ok=true){
-  TOAST.textContent = msg;
-  TOAST.className = `toast ${ok?'ok':'err'}`;
-  TOAST.style.display = 'block';
-  setTimeout(()=> TOAST.style.display='none', 3000);
-}
-/* ---------- envio seguro ---------- */
-function sendToParent(msg){
-  // pequeno debounce evita que o mesmo clique feche o modal imediatamente
-  setTimeout(()=> window.parent.postMessage(msg, '*'), 30);
-}
-/* ---------- handlers ---------- */
-document.getElementById('btnOpen').addEventListener('click', e=>{
-  e.stopPropagation();          // clique não “atravessa” para o Lowcoder
-  sendToParent({ type:'OPEN_MODAL', modalName:MODAL });
-});
-document.getElementById('btnClose').addEventListener('click', e=>{
-  e.stopPropagation();
-  sendToParent({ type:'CLOSE_MODAL', modalName:MODAL });
-});
-/* ---------- escuta resposta ---------- */
-window.addEventListener('message', ev=>{
-  if(ev.data?.type==='MODAL_RESPONSE' && ev.data.modalName===MODAL){
-      showToast(ev.data.success ? 'Modal operado com sucesso ✅'
-                                : `Erro: ${ev.data.error}`, ev.data.success);
+🧑 Profissional:
+  - id: ${userData[0]?.id}
+  - nome: ${userData[0]?.nome}
+
+🔐 Auth:
+  - access_token: ${authData.access_token}
+  - refresh_token: ${authData.refresh_token}
+
+🔑 anonKey:
+  - ${anonKey}
+    `;
   }
 });
-console.log('✅ Widget pronto – clique para abrir/fechar o modal');
-  </script>
-</body>
-</html>
+</script>
