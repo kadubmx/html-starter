@@ -1,53 +1,203 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8" />
-<title>Teste LocalStorage via postMessage</title>
-<style>
-body { font-family: monospace; white-space: pre-wrap; }
-#saida { margin-top: 1rem; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lowcoder LocalStorage Viewer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            text-align: center;
+            color: #4a5568;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .status {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .status.waiting {
+            background: #fed7d7;
+            color: #742a2a;
+            border: 2px solid #fc8181;
+        }
+
+        .status.received {
+            background: #c6f6d5;
+            color: #22543d;
+            border: 2px solid #48bb78;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .data-section {
+            margin-bottom: 25px;
+        }
+
+        .data-section h3 {
+            color: #4a5568;
+            margin-bottom: 10px;
+            font-size: 1.3em;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 5px;
+        }
+
+        .data-content {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .data-content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .data-content::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .data-content::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
+
+        .data-content::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #718096;
+            font-style: italic;
+            padding: 40px;
+        }
+
+        .info-badge {
+            display: inline-block;
+            background: #e6fffa;
+            color: #285e61;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+
+        .timestamp {
+            font-size: 12px;
+            color: #718096;
+            text-align: right;
+            margin-top: 10px;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .loading {
+            animation: pulse 1.5s infinite;
+        }
+    </style>
 </head>
 <body>
+    <div class="container">
+        <h1>🔍 Lowcoder LocalStorage Viewer</h1>
+        
+        <div id="status" class="status waiting">
+            <span id="status-text">Aguardando dados do Lowcoder...</span>
+        </div>
 
-<h1>Teste LocalStorage via postMessage</h1>
-<div id="saida">⏳ Aguardando dados…</div>
+        <div class="controls">
+            <button onclick="requestData()">📥 Solicitar Dados</button>
+            <button onclick="clearData()">🗑️ Limpar Dados</button>
+            <button onclick="sendTestMessage()">🧪 Enviar Teste</button>
+        </div>
 
-<script>
-const saida = document.getElementById("saida");
+        <div id="data-container">
+            <div class="empty-state">
+                <p>Nenhum dado recebido ainda.</p>
+                <p>Clique em "Solicitar Dados" para buscar informações do LocalStorage.</p>
+            </div>
+        </div>
+    </div>
 
-window.addEventListener("message", (event) => {
-  if (!event.data?.type) return;
+    <script>
+        let lastDataReceived = null;
+        let messageCount = 0;
 
-  if (event.data.type === "AGENDA_DATA") {
-    const payload = event.data.payload;
-    saida.textContent = `
-📅 AGENDA_DATA recebido:
-
-start: ${payload.start}
-end: ${payload.end}
-eventos:
-${JSON.stringify(payload.events, null, 2)}
-    `;
-  }
-
-  if (event.data.type === "AUTH_USER_DATA") {
-    const { authData, userData, anonKey } = event.data.payload;
-
-    saida.textContent += `
-\n\n🔐 AUTH_USER_DATA recebido:
-
-anonKey: ${anonKey}
-
-authData:
-${JSON.stringify(authData, null, 2)}
-
-userData:
-${JSON.stringify(userData, null, 2)}
-    `;
-  }
-});
-</script>
-
-</body>
-</html>
+        // Função para solicitar dados do parent (Lowcoder)
+        function requestData() {
+            console.log('Solicitando dados do Lowcoder...');
+            updateStatus('Solicitando dados...', 'waiting');
+            
+            window.parent.postMessage({
+                type: 'request_localStorage_data',
+                timestamp: new Date().toISOString(),
